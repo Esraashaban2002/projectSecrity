@@ -118,10 +118,6 @@ userSchema.methods.generateToken = async function (deviceInfo) {
       await user.save();
     
       return { accessToken, refreshToken, sessionId };
-
-    //  user.tokens = user.tokens.concat(token)
-    //  await user.save()
-    //  return token
   }
 
   userSchema.methods.cleanExpiredTokens = async function () {
@@ -134,19 +130,6 @@ userSchema.methods.generateToken = async function (deviceInfo) {
     await user.save();
   };
   
-
-//   userSchema.methods.refreshToken = async function () {
-//      const user = this
-//      const refreshToken = jwt.sign({_id:user._id.toString() ,sessionId  } , process.env.REFRESH_TOKEN_SECRET , {expiresIn : '1d'})
-
-//     user.refreshTokens = user.refreshTokens.concat(refreshToken)
-//      await user.save()
-//      return refreshToken
-//     }
-
-//////////////////////////////////////////////////////////////////////////////////////////
-//  hide private data 
-
   userSchema.methods.toJSON = function (){
       const user = this 
       const userObject = user.toObject()

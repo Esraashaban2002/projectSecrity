@@ -13,9 +13,8 @@ router.post('/register' , (req , res)=>{
 router.post('/login' , async(req , res)=>{
     try{
         const user = await User.findByCredentials(req.body.email,req.body.password)
-        // const token = await user.generateToken()
-        // const refreshToken = user.refreshToken()
-        const deviceInfo = req.headers['user-agent'] || 'Unknown Device'; // تقدر ترسله من الـ client
+
+        const deviceInfo = req.headers['user-agent'] || 'Unknown Device';
         const { accessToken, refreshToken, sessionId } = await user.generateToken(deviceInfo);
 
         res.status(200).send({ user, accessToken, refreshToken, sessionId})
