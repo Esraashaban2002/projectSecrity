@@ -2,6 +2,7 @@ const mongoose = require ('mongoose')
 const validator = require ('validator')
 const bcryptjs = require ('bcryptjs')
 const jwt = require ('jsonwebtoken')
+const { v4: uuidv4 } = require('uuid');
 
 const userSchema = new mongoose.Schema ( {
     username : {
@@ -33,12 +34,30 @@ const userSchema = new mongoose.Schema ( {
             }
         }
     },
-    tokens : [
+    tokens :  [
         {
-            type: String,
-            required : true
+          token: String,
+          sessionId: String,
+          deviceInfo: String,
+          createdAt: {
+            type: Date,
+            default: Date.now,
+          },
+          expiresAt: Date
         }
-    ],
+      ],
+      refreshTokens: [
+        {
+          token: String,
+          sessionId: String,
+          deviceInfo: String,
+          createdAt: {
+            type: Date,
+            default: Date.now,
+          },
+          expiresAt: Date
+        }
+      ]
 })
 
 userSchema.pre ("save" , async function ()  {
@@ -67,13 +86,63 @@ userSchema.statics.findByCredentials = async (em,pass) =>{
 
 //////////////////////////////////////////////////////////////////////////////////////////
 
-  userSchema.methods.generateToken = async function () {
+userSchema.methods.generateToken = async function (deviceInfo) {
      const user = this 
-     const token = jwt.sign ({_id:user._id.toString() } , "esraa2002")
-     user.tokens = user.tokens.concat(token)
-     await user.save()
-     return token
+     const sessionId = uuidv4();
+
+     await user.cleanExpiredTokens();
+
+     const accessToken = jwt.sign ({_id:user._id.toString() ,sessionId  } , process.env.ACCESS_TOKEN_SECRET , {expiresIn : '15s'})
+     const refreshToken = jwt.sign({_id:user._id.toString() ,sessionId  } , process.env.REFRESH_TOKEN_SECRET , {expiresIn : '1d'})
+
+     const now = new Date();
+     const accessExpiry = new Date(now.getTime() + 15 * 1000);
+     const refreshExpiry = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+     user.tokens.push({
+        token: accessToken,
+        sessionId,
+        deviceInfo,
+        createdAt: now,
+        expiresAt: accessExpiry
+      });
+    
+      user.refreshTokens.push({
+        token: refreshToken,
+        sessionId,
+        deviceInfo,
+        createdAt: now,
+        expiresAt: refreshExpiry
+      });
+    
+      await user.save();
+    
+      return { accessToken, refreshToken, sessionId };
+
+    //  user.tokens = user.tokens.concat(token)
+    //  await user.save()
+    //  return token
   }
+
+  userSchema.methods.cleanExpiredTokens = async function () {
+    const user = this;
+    const now = new Date();
+  
+    user.tokens = user.tokens.filter(t => t.expiresAt > now);
+    user.refreshTokens = user.refreshTokens.filter(t => t.expiresAt > now);
+  
+    await user.save();
+  };
+  
+
+//   userSchema.methods.refreshToken = async function () {
+//      const user = this
+//      const refreshToken = jwt.sign({_id:user._id.toString() ,sessionId  } , process.env.REFRESH_TOKEN_SECRET , {expiresIn : '1d'})
+
+//     user.refreshTokens = user.refreshTokens.concat(refreshToken)
+//      await user.save()
+//      return refreshToken
+//     }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //  hide private data 
