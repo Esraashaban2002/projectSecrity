@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom'
 import { addCart } from '../redux/action';
+import axios from "../API/instance";
 
 function Products() {
   const [data, setData] = useState([]);
@@ -10,14 +11,22 @@ function Products() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const authState = useSelector((state) => state.auth);
-  const addProduct = (product) => {
-    if (!authState.isAuthenticated) {
-      navigate("/login"); // Redirect to login if user is not authenticated
-    } else {
-      dispatch(addCart(product));
+
+
+  const addProduct = async (product) => {
+    try {
+      if (!authState.isAuthenticated) {
+        navigate("/login"); 
+      } else {
+        dispatch(addCart(product));
+      await axios.post("http://localhost:3000/cart", { product });
+      console.log("Product sent successfully");
+      }
+    } catch (error) {
+      console.error("Error sending product", error);
     }
   };
-
+  
   const categoryList = [
     {id: 1 , title: "All"},
     {id: 2 , title: "Men's Clothing"},

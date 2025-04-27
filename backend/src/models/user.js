@@ -97,7 +97,7 @@ userSchema.methods.generateToken = async function (deviceInfo) {
 
      const now = new Date();
      const accessExpiry = new Date(now.getTime() + 15 * 1000);
-     const refreshExpiry = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+     const refreshExpiry = new Date(now.getTime() + 24* 60 *60 * 1000);
 
      user.tokens.push({
         token: accessToken,

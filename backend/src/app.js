@@ -3,7 +3,8 @@ const express = require ('express')
 const app = express()
 const port = process.env.PORT || 3000
 const cors = require('cors');
-
+const cartRouter = require("./routers/cartRoutes")
+const userRouter = require("./routers/userAuth")
  require ('./db/connection')
 
  app.use(express.json())
@@ -14,9 +15,9 @@ const cors = require('cors');
   }));
  
 
- const userRouter = require("./routers/userAuth")
- app.use(userRouter)
 
+  app.use( cartRouter)
+ app.use( userRouter)
 
 
 app.listen(port,  () => {

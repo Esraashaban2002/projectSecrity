@@ -1,13 +1,25 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Footer, Navbar } from "../components";
 import { useSelector, useDispatch } from "react-redux";
 import { addCart, delCart } from "../redux/action";
 import {NavLink } from "react-router-dom";
 import { FaArrowLeft, FaMinus, FaPlus } from "react-icons/fa6";
+import axios from "../API/instance";
 
 const Cart = () => {
   const state = useSelector((state) => state.handleCart);
   const dispatch = useDispatch();
+
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchCartItems = async () => {
+      const res = await axios.get("http://localhost:3000/cart");
+      setProducts(res.data);
+    };
+
+    fetchCartItems();
+  }, []);
 
   const EmptyCart = () => {
     return (
@@ -52,7 +64,7 @@ const Cart = () => {
                     <h5 className="mb-0">Item List</h5>
                   </div>
                   <div className="card-body">
-                    {state.map((item) => {
+                    {products.map((item) => {
                       return (
                         <div key={item.id}>
                           <div className="row d-flex align-items-center">
@@ -130,7 +142,7 @@ const Cart = () => {
       <div className="container my-3 py-3">
         <h1 className="text-center">Cart</h1>
         <hr />
-        {state.length > 0 ? <ShowCart /> : <EmptyCart />}
+        {products.length > 0 ? <ShowCart /> : <EmptyCart />}
       </div>
       <Footer/>
     </>

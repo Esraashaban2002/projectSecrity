@@ -1,6 +1,7 @@
 const express = require('express')
 const User = require('../models/user')
-const auth = require('../middleware/auth')
+const jwt = require('jsonwebtoken');
+const auth = require('../middleware/auth');
 const router = express.Router()
 
 router.post('/register' , (req , res)=>{
@@ -44,6 +45,47 @@ router.delete('/logout', auth, async (req, res) => {
         res.send({ message: 'Logged out from all sessions.' });
     } catch (e) {
         res.status(500).send({ error: e.message });
+    }
+});
+
+router.post('/refresh', async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+        if (!refreshToken) return res.status(401).send({ error: 'No refresh token provided' });
+
+        const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+        const user = await User.findById(decoded._id);
+        if (!user) throw new Error('User not found');
+
+        await user.cleanExpiredTokens();
+
+        const session = user.refreshTokens.find(t => t.token === refreshToken && t.sessionId === decoded.sessionId);
+        if (!session) throw new Error('Refresh token invalid');
+
+        // إنشاء accessToken جديد
+        const accessToken = jwt.sign(
+          { _id: user._id.toString(), sessionId: decoded.sessionId },
+          process.env.ACCESS_TOKEN_SECRET,
+          { expiresIn: '30s'}
+        );
+
+        const now = new Date();
+        const accessExpiry = new Date(now.getTime() + 30 * 1000);
+
+        user.tokens.push({
+          token: accessToken,
+          sessionId: decoded.sessionId,
+          deviceInfo: session.deviceInfo,
+          createdAt: now,
+          expiresAt: accessExpiry
+        });
+
+        await user.save();
+
+        res.send({ accessToken });
+    } catch (e) {
+        res.status(401).send({ error: e.message });
     }
 });
 

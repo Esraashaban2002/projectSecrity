@@ -3,7 +3,8 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { FaCartShopping, FaUserPlus } from "react-icons/fa6";
 import { MdLogin, MdLogout } from "react-icons/md";
 import { useSelector, useDispatch } from "react-redux";
-import axios from 'axios';
+// import axios from 'axios';
+import axios from "../API/instance";
 
 
 function Navbar() {
