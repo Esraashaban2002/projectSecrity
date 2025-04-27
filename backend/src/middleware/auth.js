@@ -45,4 +45,17 @@ const auth = async (req, res, next) => {
     }
 };
 
-module.exports = auth;
+function isUser(req, res, next) {
+    if (req.user.role !== "user") return res.sendStatus(403);
+    next();
+  }
+  
+  function isAdmin(req, res, next) {
+    if (req.user.role !== "admin") return res.sendStatus(403);
+    next();
+  }
+
+module.exports = {auth ,
+    isUser ,
+    isAdmin
+};

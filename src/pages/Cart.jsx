@@ -14,8 +14,14 @@ const Cart = () => {
 
   useEffect(() => {
     const fetchCartItems = async () => {
-      const res = await axios.get("http://localhost:3000/cart");
+      const userRole = localStorage.getItem("role")
+      if(userRole === "admin"){
+      const res = await axios.get("http://localhost:3000/carts");
       setProducts(res.data);
+      } else{
+        const res = await axios.get("http://localhost:3000/cart");
+        setProducts(res.data);
+        }
     };
 
     fetchCartItems();

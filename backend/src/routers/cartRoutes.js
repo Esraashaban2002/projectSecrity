@@ -2,8 +2,7 @@ const express = require("express");
 const router = express.Router();
 const CryptoJS = require("crypto-js");
 const CartItem = require("../models/CartItem");
-const auth = require ("../middleware/auth")
-
+const { auth, isAdmin, isUser } = require('../middleware/auth');
 // Secret Key
 const secretKey = process.env.SECRET_KEY
 
@@ -29,7 +28,27 @@ router.post("/cart" , auth , async (req, res) => {
   }
 });
 
-router.get("/cart" , auth , async (req, res) => {
+router.get("/carts" , auth , isAdmin , async (req, res) => {
+  try {
+    const items = await CartItem.find({});
+
+    const decryptedItems = items.map((item) => {
+      const bytes = CryptoJS.TripleDES.decrypt(item.encryptedData, CryptoJS.enc.Utf8.parse(secretKey), {
+        mode: CryptoJS.mode.ECB,
+        padding: CryptoJS.pad.Pkcs7,
+      });
+      const decryptedData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+      return decryptedData;
+    });
+
+    res.json(decryptedItems);
+  } catch (error) {
+    console.error("❌ Error fetching products:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+router.get("/cart" , auth , isUser , async (req, res) => {
   try {
     const items = await CartItem.find({userId : req.user._id });
 
@@ -48,5 +67,6 @@ router.get("/cart" , auth , async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 });
+
 
 module.exports = router;

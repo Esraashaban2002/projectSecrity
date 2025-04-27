@@ -1,9 +1,10 @@
 const express = require('express')
 const User = require('../models/user')
 const jwt = require('jsonwebtoken');
-const auth = require('../middleware/auth');
+const authMiddleware = require('../middleware/auth');
 const router = express.Router()
-
+const auth = authMiddleware.auth
+ 
 router.post('/register' , (req , res)=>{
     const user = new User (req.body)
     user.save()
@@ -18,7 +19,7 @@ router.post('/login' , async(req , res)=>{
         const deviceInfo = req.headers['user-agent'] || 'Unknown Device';
         const { accessToken, refreshToken, sessionId } = await user.generateToken(deviceInfo);
 
-        res.status(200).send({ user, accessToken, refreshToken, sessionId})
+        res.status(200).send({ user, accessToken, refreshToken, sessionId , role : user.role })
     }
     catch(e){
         res.status(400).send(e.message)
